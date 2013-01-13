@@ -1,0 +1,91 @@
+<html><head>
+<link rel="stylesheet" href="bootstrap-full.css">
+<style>
+.chat-list {
+	height: 400px;
+	overflow-y: scroll;
+	width: 500px;
+	border-radius: 7px;
+}
+.chat-message {
+	margin: 5px;
+	color: #000000;
+}
+.username {
+	font-weight: bold;
+}
+#message {
+	width: 781px;
+	max-width: 781px;
+	min-width: 781px;
+}
+.title {
+	text-align: center;
+}
+</style>
+</head><body>
+<div class="container">
+<div class="row-fluid"> 
+	<div class="span10">
+		<h2 class="title">
+			Simply chat
+		</h2>
+	</div>
+</div>
+<div class="row-fluid">
+<div class="span10 well chat-list">
+
+</div>
+<div class="span2 well users-list">
+
+</div>
+</div>
+<textarea id="message"></textarea>
+</div>
+
+<script src="socket-io.js"></script>
+<script src="jquery.js"></script>
+<script>
+  $(function(){
+  var socket = io.connect('http://' + location.host + ':8001');
+  socket.on('connect', function(){ 
+	console.log('connected');
+  });
+    socket.on('updatechat', function(username, msg){ 
+	console.log('updatechat', arguments);
+	var parent = $(".chat-list");
+	var $body = $('<span>').addClass('username').text(username + ' says: ');
+	var $text = $('<pre>').addClass('text').text(msg);
+	var $msg = $('<div>').addClass('chat-message');
+	$msg.append($body);
+	$msg.append($text);
+	parent.append($msg);
+	parent.animate({ scrollTop: parent.height()}, 100);
+  });
+    socket.on('updateusers', function(data){ 
+	console.log('updateusers',arguments);
+	var ul = $('<ul>').addClass('unstyled');
+	var li;
+	for(var name in data) {
+		li = $('<li>').text(name);
+		ul.append(li);
+	}
+	$('.users-list').html(ul);
+  });
+  function addUser(username) {
+	socket.emit('adduser',username);
+  }
+  function sendMessage(msg) {
+	socket.emit('sendchat',msg);
+  }
+  addUser(prompt("Enter your name"));
+  $('#message').keydown(function (e) {
+	  if (e.ctrlKey && e.keyCode == 13) {// Ctrl-Enter pressed
+		var msg = $("#message");
+		sendMessage(msg.val());
+		msg.val('');
+	  }
+  });
+  
+  });
+</script></body></html>
