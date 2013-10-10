@@ -117,7 +117,7 @@
             var parent = $(".chat-list").find('ul');
             var msg = $('<li>').addClass('message').text(username + ': ' + msg);
             parent.append(msg);
-            parent.animate({ scrollTop: parent.find('ul').height()}, 100);
+            parent.animate({ scrollTop: parent.height()}, 100);
         }
         socket.on('updatechat', addMessage);
         socket.on('updateusers', function (data) {
