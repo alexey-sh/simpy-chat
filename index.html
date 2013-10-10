@@ -104,14 +104,16 @@
         var socket = io.connect('http://' + location.host + ':8001');
         socket.on('connect', function () {
             console.log('connected');
+            addMessage('Client', 'connected with ' + socket.socket.transport.name)
         });
-        socket.on('updatechat', function (username, msg) {
+        function addMessage(username, msg) {
             console.log('updatechat', arguments);
             var parent = $(".chat-list");
             var msg = $('<li>').addClass('message').text(username + ': ' + msg);
             parent.find('ul').append(msg);
             parent.animate({ scrollTop: parent.height()}, 100);
-        });
+        }
+        socket.on('updatechat', addMessage);
         socket.on('updateusers', function (data) {
             console.log('updateusers', arguments);
             var ul = $('<ul>').addClass('unstyled inline');
