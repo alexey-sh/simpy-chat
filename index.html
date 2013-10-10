@@ -97,7 +97,8 @@
 </div>
 
 <script src="socket-io.js"></script>
-<script src="jquery.js"></script>
+<script src="libs/jquery/jquery-1.10.2.js"></script>
+<script src="libs/jquery/jquery.cookie-1.4.0.js"></script>
 <script>
     $(function () {
         var socket = io.connect('http://' + location.host + ':8001');
@@ -134,8 +135,12 @@
             sendSocketMessage(msg.val());
             msg.val('');
         }
-
-        addUser(prompt("Enter your name"));
+        var currentUser = $.cookie('user');
+        if (!currentUser) {
+            currentUser = prompt("Enter your name");
+            $.cookie('user', currentUser);
+        }
+        addUser(currentUser);
         $('#message').keydown(function (e) {
             if (e.ctrlKey && e.keyCode == 13) {// Ctrl-Enter pressed
                 sendMessage();
