@@ -108,10 +108,10 @@
         });
         function addMessage(username, msg) {
             console.log('updatechat', arguments);
-            var parent = $(".chat-list");
+            var parent = $(".chat-list").find('ul');
             var msg = $('<li>').addClass('message').text(username + ': ' + msg);
-            parent.find('ul').append(msg);
-            parent.animate({ scrollTop: parent.height()}, 100);
+            parent.append(msg);
+            parent.animate({ scrollTop: parent.find('ul').height()}, 100);
         }
         socket.on('updatechat', addMessage);
         socket.on('updateusers', function (data) {
@@ -148,8 +148,10 @@
                 sendMessage();
             }
         });
-        $('.send').on('click', sendMessage)
-
+        $('.send').on('click', sendMessage);
+        socket.on('disconnect', function () {
+            socket.socket.reconnect();
+        })
     });
 </script>
 </body>
