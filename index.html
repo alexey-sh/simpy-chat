@@ -1,91 +1,149 @@
-<html><head>
-<link rel="stylesheet" href="bootstrap-full.css">
-<style>
-.chat-list {
-	height: 400px;
-	overflow-y: scroll;
-	width: 500px;
-	border-radius: 7px;
-}
-.chat-message {
-	margin: 5px;
-	color: #000000;
-}
-.username {
-	font-weight: bold;
-}
-#message {
-	width: 781px;
-	max-width: 781px;
-	min-width: 781px;
-}
-.title {
-	text-align: center;
-}
-</style>
-</head><body>
-<div class="container">
-<div class="row-fluid"> 
-	<div class="span10">
-		<h2 class="title">
-			Simply chat
-		</h2>
-	</div>
-</div>
-<div class="row-fluid">
-<div class="span10 well chat-list">
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="libs/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="libs/bootstrap/css/bootstrap-responsive.min.css">
+    <style>
+        .chat-list {
+            height: 100%;
+            overflow-y: scroll;
+            width: 500px;
+            border-radius: 7px;
+            border: 1px solid #71a4bf;
+        }
+        .wrap-main, body, html {
+            height: 100%;
+            min-height: 100%;
+            max-height: 100%;
+        }
+        .wrap-users-list {
+            height: 10%;
+        }
+        .wrap-chat-list {
+            height: 80%;
+        }
+        .wrap-chat-form {
+            height: 10%;
+        }
+        .wrap-chat-form form {
+            margin: 0;
+        }
+        .wrap-chat-form * {
+            height: 100%;
+            min-height: 100%;
+        }
+        .send {
+            width: 20%;
+            margin: 0;
+            display: inline-block;
+            margin-left: -5px;
+            height: 100%;
+            min-height: 100%;
+        }
+        .username {
+            font-weight: bold;
+        }
 
-</div>
-<div class="span2 well users-list">
+        #message {
+            width: 80%;
+            margin: 0;
+            display: inline-block;
+            height: 100%;
+        }
+        .chat-list ul {
+            margin: 10px 0;
+        }
+        .message {
+            margin: 5px;
+            background-color: rgba(244, 251, 255, 0.4);
+            border-radius: 5px;
+            border: 1px solid #2D74C0;
+            padding: 5px;
+            font-size: 1.2em;
+            line-height: 1.3em;
+        }
+    </style>
+</head>
+<body>
+<div class="container wrap-main">
+    <div class="row-fluid wrap-users-list">
+        <div class="span12 users-list">
 
-</div>
-</div>
-<textarea id="message"></textarea>
+        </div>
+    </div>
+    <div class="row-fluid wrap-chat-list">
+        <div class="span12 chat-list">
+            <ul class="unstyled">
+                <li class="message">
+                    <span>Username:</span>
+                    <span>text</span>
+                </li>
+                <li class="message">
+                    <span>Username:</span>
+                    <span>text</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row-fluid wrap-chat-form">
+        <div class="span12">
+            <form onsubmit="return false;" class="form-inline">
+                <textarea class="span10" id="message"></textarea>
+                <button class="btn send">Send</button>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script src="socket-io.js"></script>
 <script src="jquery.js"></script>
 <script>
-  $(function(){
-  var socket = io.connect('http://' + location.host + ':8001');
-  socket.on('connect', function(){ 
-	console.log('connected');
-  });
-    socket.on('updatechat', function(username, msg){ 
-	console.log('updatechat', arguments);
-	var parent = $(".chat-list");
-	var $body = $('<span>').addClass('username').text(username + ' says: ');
-	var $text = $('<pre>').addClass('text').text(msg);
-	var $msg = $('<div>').addClass('chat-message');
-	$msg.append($body);
-	$msg.append($text);
-	parent.append($msg);
-	parent.animate({ scrollTop: parent.height()}, 100);
-  });
-    socket.on('updateusers', function(data){ 
-	console.log('updateusers',arguments);
-	var ul = $('<ul>').addClass('unstyled');
-	var li;
-	for(var name in data) {
-		li = $('<li>').text(name);
-		ul.append(li);
-	}
-	$('.users-list').html(ul);
-  });
-  function addUser(username) {
-	socket.emit('adduser',username);
-  }
-  function sendMessage(msg) {
-	socket.emit('sendchat',msg);
-  }
-  addUser(prompt("Enter your name"));
-  $('#message').keydown(function (e) {
-	  if (e.ctrlKey && e.keyCode == 13) {// Ctrl-Enter pressed
-		var msg = $("#message");
-		sendMessage(msg.val());
-		msg.val('');
-	  }
-  });
-  
-  });
-</script></body></html>
+    $(function () {
+        var socket = io.connect('http://' + location.host + ':8001');
+        socket.on('connect', function () {
+            console.log('connected');
+        });
+        socket.on('updatechat', function (username, msg) {
+            console.log('updatechat', arguments);
+            var parent = $(".chat-list");
+            var msg = $('<li>').addClass('message').text(username + ': ' + msg);
+            parent.find('ul').append(msg);
+            parent.animate({ scrollTop: parent.height()}, 100);
+        });
+        socket.on('updateusers', function (data) {
+            console.log('updateusers', arguments);
+            var ul = $('<ul>').addClass('unstyled');
+            var li;
+            for (var name in data) {
+                li = $('<li>').text(name);
+                ul.append(li);
+            }
+            $('.users-list').html(ul);
+        });
+        function addUser(username) {
+            socket.emit('adduser', username);
+        }
+
+        function sendSocketMessage(msg) {
+            socket.emit('sendchat', msg);
+        }
+
+        function sendMessage() {
+            var msg = $("#message");
+            sendSocketMessage(msg.val());
+            msg.val('');
+        }
+
+        addUser(prompt("Enter your name"));
+        $('#message').keydown(function (e) {
+            if (e.ctrlKey && e.keyCode == 13) {// Ctrl-Enter pressed
+                sendMessage();
+            }
+        });
+        $('.send').on('click', sendMessage)
+
+    });
+</script>
+</body>
+</html>
