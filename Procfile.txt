@@ -1,0 +1,1 @@
+web: coffee src/index.coffee -n
