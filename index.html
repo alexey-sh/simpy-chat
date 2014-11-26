@@ -2,29 +2,31 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="libs/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="libs/bootstrap/css/bootstrap-responsive.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.1/css/bootstrap.min.css">
+
     <style>
         .chat-list {
             height: 100%;
             overflow-y: scroll;
-            width: 500px;
-            border-radius: 7px;
-            border: 1px solid #71a4bf;
+
         }
-        .wrap-main, body, html {
+        .wrap-main, .wrap-users-list, body, html {
             height: 100%;
             min-height: 100%;
             max-height: 100%;
         }
-        .wrap-users-list {
-            height: 10%;
+        .wrap-main {
+            padding-bottom: 43px;
         }
-        .wrap-chat-list {
-            height: 80%;
+        .wrap-users-list {
+
+
+        }
+        .chat-list {
+            height: 100%;
         }
         .wrap-chat-form {
-            height: 10%;
+            height: 40px;
         }
         .wrap-chat-form form {
             margin: 0;
@@ -40,20 +42,28 @@
             min-height: 100%;
         }
         .send {
-            width: 20%;
+            width: 80px;
             margin: 0;
             display: inline-block;
-            margin-left: -5px;
             height: 100%;
             min-height: 100%;
+            vertical-align: top;
         }
         .username {
             font-weight: bold;
         }
 
-
+        .textarea-wrap {
+            display: inline-block;
+            width: 100%;
+            margin-right: -100px;
+            padding-right: 100px;
+        }
+        .textarea-wrap textarea {
+            padding: 2px 4px;
+        }
         #message {
-            width: 80%;
+            width: 100%;
             margin: 0;
             display: inline-block;
             height: 100%;
@@ -63,86 +73,110 @@
         .chat-list ul {
             margin: 10px 0;
         }
-        .message {
-            margin: 5px;
-            background-color: rgba(244, 251, 255, 0.4);
-            border-radius: 5px;
-            border: 1px solid #2D74C0;
-            padding: 5px;
-            font-size: 1.2em;
-            line-height: 1.3em;
+        .msg-prefix {
+            color: #3c3535;
         }
+        .msg-time {
+            color: #aaa;
+            margin-right: 5px;
+        }
+
+
     </style>
 </head>
 <body>
-<div class="container wrap-main">
-    <div class="row-fluid wrap-users-list">
-        <div class="span12 users-list">
-
-        </div>
-    </div>
-    <div class="row-fluid wrap-chat-list">
-        <div class="span12 chat-list">
+<div class="container-fluid wrap-main">
+    <div class="row wrap-users-list">
+        <div class="col-md-3 users-list">
+            Users in room <span class="room"></span> (<a href="#" class="logout">logout</a>)
             <ul class="unstyled">
 
             </ul>
         </div>
+        <div class="col-md-9 chat-list">
+
+            <ul class="list-unstyled">
+
+            </ul>
+        </div>
     </div>
-    <div class="row-fluid wrap-chat-form">
+    <div class="row wrap-chat-form">
         <form onsubmit="return false;" class="form-inline">
-            <textarea class="span10" id="message"></textarea>
-            <button class="btn send">Send</button>
+            <div class="textarea-wrap">
+                <textarea class="form-control" id="message" placeholder="Type here..."></textarea>
+            </div>
+            <button class="btn btn-default send">Send</button>
         </form>
     </div>
 </div>
 
-<script src="socket-io.js"></script>
-<script src="libs/jquery/jquery-1.10.2.js"></script>
-<script src="libs/jquery/jquery.cookie-1.4.0.js"></script>
+<script src="//cdn.socket.io/socket.io-1.2.0.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
 <script>
     $(function () {
-        var socket = io.connect('http://' + location.host + ':8001');
+        var room = sessionStorage.getItem('room') || prompt("Enter room name");
+        var username = sessionStorage.getItem('username') || prompt("Enter your name");
+        var password = sessionStorage.getItem('pass') || prompt("Enter password");
+        var me = null;
+        sessionStorage.setItem('room', room);
+        sessionStorage.setItem('username', username);
+        sessionStorage.setItem('pass', password);
+        socket = io();
+        messages = [];
+        socket.on('joinedUser', function (user) {
+            if (!me || user.id === me.id) {
+                return;
+            }
+            var li = $("<li>").text(user.name).attr('data-id', user.id);
+            $('.users-list ul').append(li)
+        });
+
+        socket.on('joined', function (data) {
+            var users = data.users;
+            me = data.me;
+            console.log('joined', data);
+            $('.room').text(data.room);
+            $('.users-list ul').empty();
+            $.each(users, function(index, user) {
+                var li = $("<li>").text(user.name).attr('data-id', user.id);
+                if (user.id === data.me.id) {
+                    li.text('Me (' + user.name + ')')
+                }
+                $('.users-list ul').append(li)
+            });
+            $('textarea').focus();
+        });
+
+        socket.on('message', function (data) {
+            messages.push(data);
+            receivedMessage(data);
+        });
+
         socket.on('connect', function () {
-            console.log('connected');
-            addMessage('Client', 'connected with ' + socket.socket.transport.name);
-            var currentUser = $.cookie('user');
-            if (!currentUser) {
-                currentUser = prompt("Enter your name");
-                $.cookie('user', currentUser);
-            }
-            addUser(currentUser);
-        });
-        function addMessage(username, msg) {
-            console.log('updatechat', arguments);
-            var parent = $(".chat-list").find('ul');
-            var msg = $('<li>').addClass('message').text(username + ': ' + msg);
-            parent.append(msg);
-            parent.animate({ scrollTop: parent.height()}, 100);
-        }
-        socket.on('updatechat', addMessage);
-        socket.on('updateusers', function (data) {
-            console.log('updateusers', arguments);
-            var ul = $('<ul>').addClass('unstyled inline');
-            var li;
-            for (var name in data) {
-                li = $('<li>').text(name);
-                ul.append(li);
-            }
-            $('.users-list').html(ul);
-        });
-        function addUser(username) {
-            socket.emit('adduser', username);
-        }
+            socket.emit('join', {room: room, username: username});
 
-        function sendSocketMessage(msg) {
-            socket.emit('sendchat', msg);
-        }
+        });
 
-        function sendMessage() {
-            var msg = $("#message");
-            sendSocketMessage(msg.val());
-            msg.val('');
-        }
+        socket.on('disconnect', function () {
+            console.log('disconnect')
+        });
+
+        socket.on('disconnected', function (user) {
+            console.log('disconnected', user);
+            $('.users-list').find('li[data-id="$1"]'.replace("$1", user.id)).remove()
+        });
+
+        socket.on('getOldMessages', function () {
+            console.log('getOldMessages', messages.length);
+            socket.emit('oldMessages', messages);
+        });
+
+        socket.on('oldMessages', function (msgs) {
+            console.log('oldMessages', msgs.length);
+            msgs.reverse();
+            msgs.forEach(function (m) {messages.unshift(m);receivedMessage(m, true);})
+        });
 
         $('#message').keydown(function (e) {
             if (e.ctrlKey && e.keyCode == 13) {// Ctrl-Enter pressed
@@ -150,9 +184,87 @@
             }
         });
         $('.send').on('click', sendMessage);
-        socket.on('disconnect', function () {
-            socket.socket.reconnect();
-        })
+        $('.logout').on('click', function () {
+            sessionStorage.clear();
+            location.reload()
+        });
+
+        function receivedMessage (data, prepend) {
+            console.log('message', data);
+            var li = $('<li>')
+                    .append($("<span class='msg-time'>").text(formatDate(new Date(data.date))))
+                    .append($("<span class='msg-prefix'>").text(data.author.name + " said: "))
+                    .append($("<span class='msg-body'>").text(decrypt(data.message)));
+            if (data.author.id === me.id) {
+                li.addClass('my-message').find('.msg-prefix').text("I said: ");
+            }
+            $('.chat-list ul')[prepend ? 'prepend': 'append'](li)
+        }
+
+        function sendSocketMessage(msg) {
+            socket.emit('sendMessage', {message: msg});
+        }
+
+        function sendMessage() {
+            var msg = $("#message");
+            sendSocketMessage(encrypt(msg.val()));
+            msg.val('');
+        }
+
+        function fillZero (number) {
+            if (number.toString().length === 1) {
+                number = "0" + number
+            }
+            return number;
+        }
+
+        function formatDate (date) {
+            return "Y/M/D h:m:s".
+                    replace("Y", date.getFullYear()).
+                    replace("M", fillZero(date.getMonth() + 1)).
+                    replace("D", fillZero(date.getDate())).
+                    replace("h", fillZero(date.getHours())).
+                    replace("m", fillZero(date.getMinutes())).
+                    replace("s", fillZero(date.getSeconds()));
+        }
+
+
+        var JsonFormatter = {
+            stringify: function (cipherParams) {
+                var jsonObj = {
+                    ct: cipherParams.ciphertext.toString(CryptoJS.enc.Base64)
+                };
+                if (cipherParams.iv) {
+                    jsonObj.iv = cipherParams.iv.toString();
+                }
+                if (cipherParams.salt) {
+                    jsonObj.s = cipherParams.salt.toString();
+                }
+                return JSON.stringify(jsonObj);
+            },
+            parse: function (jsonStr) {
+                var jsonObj = JSON.parse(jsonStr);
+                var cipherParams = CryptoJS.lib.CipherParams.create({
+                    ciphertext: CryptoJS.enc.Base64.parse(jsonObj.ct)
+                });
+                if (jsonObj.iv) {
+                    cipherParams.iv = CryptoJS.enc.Hex.parse(jsonObj.iv)
+                }
+                if (jsonObj.s) {
+                    cipherParams.salt = CryptoJS.enc.Hex.parse(jsonObj.s)
+                }
+                return cipherParams;
+            }
+        };
+
+        function decrypt (str) {
+            return CryptoJS.AES.decrypt(str, password, { format: JsonFormatter }).toString(CryptoJS.enc.Utf8);
+        }
+
+        function encrypt (str) {
+            return CryptoJS.AES.encrypt(str, password, { format: JsonFormatter }).toString();
+        }
+
     });
 </script>
 </body>

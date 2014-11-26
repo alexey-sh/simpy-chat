@@ -1,35 +1,90 @@
-var io = require('socket.io').listen(8001);
-var usernames = {};
+var app = require('express')();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
 
-io.sockets.on('connection', function (socket) {
+var users = {
+	/* socketId: {
+		name: username
+		roomId: roomId
+	}
+	*/
+};
 
-	// when the client emits 'sendchat', this listens and executes
-	socket.on('sendchat', function (data) {
-		// we tell the client to execute 'updatechat' with 2 parameters
-		io.sockets.emit('updatechat', socket.username, data);
-	});
+var rooms = {
+	/*
+	* uniqueId: [<userId>]
+	* }
+	* */
+};
 
-	// when the client emits 'adduser', this listens and executes
-	socket.on('adduser', function(username){
-		// we store the username in the socket session for this client
-		socket.username = username;
-		// add the client's username to the global list
-		usernames[username] = username;
-		// echo to client they've connected
-		socket.emit('updatechat', 'SERVER', 'you have connected');
-		// echo globally (all clients) that a person has connected
-		socket.broadcast.emit('updatechat', 'SERVER', username + ' has connected');
-		// update the list of users in chat, client-side
-		io.sockets.emit('updateusers', usernames);
-	});
-
-	// when the user disconnects.. perform this
-	socket.on('disconnect', function(){
-		// remove the username from global usernames list
-		delete usernames[socket.username];
-		// update list of users in chat, client-side
-		io.sockets.emit('updateusers', usernames);
-		// echo globally that this client has left
-		socket.broadcast.emit('updatechat', 'SERVER', socket.username + ' has disconnected');
-	});
+app.get('/', function(req, res){
+	res.sendFile(__dirname + '/index.html');
 });
+
+io.on('connection', function(socket){
+	console.log('connected');
+	users[socket.id] = {
+		name: '',
+		room: ''
+	};
+
+	socket.on('sendMessage', function (data) {
+		console.log('send chat', data);
+		io.sockets.to(data.room).emit('message', data)
+	});
+
+	socket.on('disconnect', function() {
+
+		var user = users[socket.id];
+		rooms[user.room].remove(socket.id);
+		if (rooms[user.room].length === 0) {
+			delete rooms[user.room]
+		}
+		delete users[socket.id];
+		try {
+			io.sockets.to(user.room).emit('disconnected', user);
+		}
+		catch (e) {
+			console.error(e)
+		}
+		console.log('disconnect', users, socket.id, rooms);
+	});
+
+	socket.on('join', function (data) {
+		createRoom(socket, data)
+	});
+
+
+});
+
+/*
+* @param data {Object}
+* @option data {String} room
+* @option data {String} username
+* */
+function createRoom (socket, data) {
+	socket.join(data.room, function (err) {
+
+		if (err) {
+			console.error(error);
+			return
+		}
+		users[socket.id] = {name: data.username, room: data.room};
+		if (!rooms[data.room]) {rooms[data.room] = [];}
+		rooms[data.room].push(socket.id);
+		io.sockets.to(data.room).emit('joined', data);
+		console.log('joined', data, users, socket.id, rooms);
+	});
+}
+
+http.listen(3000, function(){
+	console.log('listening on *:3000');
+});
+
+
+
+Array.prototype.remove = function(item) {
+	var index = this.indexOf(item);
+	this.splice(index, 1);
+	return this;
+};
