@@ -1,5 +1,5 @@
 class Room
-    constructor: () ->
+    constructor: (@verification) ->
         @users = []
 
     hasUser: (userId) ->
@@ -24,8 +24,8 @@ class Flat
     constructor: () ->
         @rooms = {}
 
-    push: (namespace) ->
-        room = @rooms[namespace] or new Room()
+    push: (namespace, verification) ->
+        room = @rooms[namespace] or new Room(verification)
         @rooms[namespace] = room
         return room
 
@@ -34,8 +34,9 @@ class Flat
 
     removeUser: (namespace, userId) ->
         room = @get(namespace)
-        room.removeUser(userId)
-        delete @rooms[namespace] if room.isEmpty()
+        if room
+            room.removeUser(userId)
+            delete @rooms[namespace] if room.isEmpty()
 
 
 module.exports = Flat

@@ -53,12 +53,21 @@ io.on "connection", (socket) ->
 
     socket.on "join", (data) ->
         namespace = data.room
+        existsRoom = flat.get(namespace)
+        if existsRoom
+            if data.verification isnt existsRoom.verification
+                console.log('verification failed', data.verification, existsRoom.verification)
+                socket.emit('joinFailed')
+                return
+            else
+                console.log('verified successfully')
+        console.log('join user to namespace', data.username, namespace)
         socket.join namespace, (err) ->
             if err
                 console.error err
                 return
             user = users.add(socket.id, data.username, namespace)
-            flat.push(namespace).addUser(user.id)
+            flat.push(namespace, data.verification).addUser(user.id)
             usersInFlat = users.find(flat.get(namespace).getUsers())
             data =
                 users: usersInFlat

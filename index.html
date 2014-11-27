@@ -16,13 +16,23 @@
             height: 100%;
 
         }
-        .chat, .login, .wrap-main, .wrap-users-list, body, html {
+        .chat, .login, .wrap-main, body, html {
             height: 100%;
             min-height: 100%;
             max-height: 100%;
         }
-        .wrap-main {
 
+        .status {
+            position: fixed;
+            top: 6px;
+            left: 6px;
+            border-radius: 3px;
+            height: 6px;
+            width: 6px;
+            background-color: #c4c6c6;
+        }
+        .status.connected {
+            background-color: rgba(109, 208, 0, 0.77);
         }
         .wrap-main .chat, .login {
             display: none;
@@ -34,13 +44,11 @@
             display: block;
         }
 
-        .wrap-users-list {
 
-
-        }
         .chat-list-wrap {
             overflow-y: scroll;
             height: 100%;
+            margin-right: -10px;
         }
         .chat-list {
             height: 100%;
@@ -50,13 +58,24 @@
             padding-left: 250px;
             padding-right: 0;
         }
+        .chat-list ul {
+
+            margin: 10px;
+        }
+        .msg-prefix {
+            color: #3c3535;
+        }
+        .msg-time {
+            color: #aaa;
+            margin-right: 5px;
+        }
+
         .wrap-chat-form {
             height: 50px;
             position: fixed;
-            bottom: 0px;
-            right: 15px;
-            left: 250px;
-            width: inherit;
+            bottom: 0;
+            right: 10px;
+            left: 260px;
         }
         .wrap-chat-form form {
             margin: 0 15px 0 5px;
@@ -65,12 +84,25 @@
             height: 100%;
             min-height: 100%;
         }
-        .wrap-users-list ul {
-            margin: 0;
+        .users-list ul {
+
         }
         .users-list {
             min-height: 100%;
+            max-width: 240px;
+            z-index: 10000;
+            border-right: 1px solid #E2E2E2;
+        }
+        .users-list li {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 240px;
+            white-space: nowrap;
+        }
+        .room-name {
             max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .textarea-wrap {
@@ -89,19 +121,15 @@
             min-height: 100%;
             font-size: 14px;
             line-height: 16px;
+            border-color: #E2E2E2;
+        }
+        #message:focus {
+            -webkit-box-shadow: none;
+            -moz-box-shadow: none;
+            box-shadow: none;
+            border-radius: 3px;
         }
 
-        .chat-list ul {
-
-            margin: 10px 0;
-        }
-        .msg-prefix {
-            color: #3c3535;
-        }
-        .msg-time {
-            color: #aaa;
-            margin-right: 5px;
-        }
 
         .form-signin {
             max-width: 330px;
@@ -156,6 +184,9 @@
             border-top-left-radius: 0;
             border-top-right-radius: 0;
         }
+        .form-signin .text-danger {
+            color: #a94442;
+        }
 
 
 
@@ -163,11 +194,12 @@
     </style>
 </head>
 <body>
+<div class="status"></div>
 <div class="container-fluid wrap-main">
-    <div class="chat">
-        <div class="row wrap-users-list">
+        <div class="row wrap-users-list chat">
             <div class="col-md-3 col-sm-3 col-xs-3 users-list">
-                Users in room <span class="room-name"></span>: (<a href="#" class="logout">leave</a>)
+                <div class="room-name"></div>
+                <a href="#" class="logout">leave</a>
                 <ul class="list-unstyled">
 
                 </ul>
@@ -189,22 +221,25 @@
             </div>
         </div>
 
-    </div>
     <div class="login">
         <form class="form-signin" role="form">
             <h2 class="form-signin-heading">Please, sign in</h2>
             <label for="inputRoom" class="sr-only">Room</label>
-            <input type="text" tabindex="1" id="inputRoom" class="form-control room" placeholder="Room" required="on" autofocus="on">
+            <input type="text" tabindex="1" id="inputRoom" class="form-control room" placeholder="Room" required="on" autocomplete="off" autofocus="on">
             <label for="inputNick" class="sr-only">Nick</label>
-            <input type="text" tabindex="2"  id="inputNick" class="form-control nick" placeholder="Nick name" required="on">
+            <input type="text" tabindex="2"  id="inputNick" class="form-control nick" placeholder="Nick name" autocomplete="off" required="on">
             <label for="inputPassword" class="sr-only">Password</label>
-            <input type="password" tabindex="3"  id="inputPassword" class="form-control password" placeholder="Password" required="on">
+            <input type="password" tabindex="3"  id="inputPassword" class="form-control password" placeholder="Password" autocomplete="off" required="on">
             <div class="checkbox">
                 <label>
                     <input tabindex="4"  type="checkbox" value="remember-me" class="remember"> <span>Remember username and room</span>
                 </label>
             </div>
             <button class="btn btn-lg btn-default btn-block" type="submit">Join!</button>
+            <span id="helpBlock" class="help-block text-danger hide">
+                The room is exists and password is not valid.
+                Choose another room or enter a valid password.
+            </span>
         </form>
     </div>
 </div>
@@ -213,21 +248,108 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/sha3.js"></script>
+
 <script>
     $(function () {
+        var connected = false;
         var $main = $('.wrap-main');
+        var me = null;
+        messages = [];
+        password = void 0;
+        socket = io();
+        socket.on('joinedUser', function (user) {
+            if (!me || user.id === me.id) {
+                return;
+            }
+            var li = $("<li>").text(user.name).attr('data-id', user.id);
+            $('.users-list ul').append(li)
+        });
+
+        socket.on('joined', function (data) {
+            $main.addClass('logged-in');
+            $main.removeClass('not-logged-in');
+            $('.form-signin .text-danger').addClass('hide');
+            console.log('joined');
+            var users = data.users;
+            me = data.me;
+            console.log('joined', data);
+            $('.room-name').text(data.room);
+            $('.users-list ul').empty();
+            $.each(users, function(index, user) {
+                var li = $("<li>").text(user.name).attr('data-id', user.id);
+                if (user.id === data.me.id) {
+                    li.text('Me (' + user.name + ')')
+                }
+                $('.users-list ul').append(li)
+            });
+            $('textarea').focus();
+        });
+
+        socket.on('message', function (data) {
+            messages.push(data);
+            receivedMessage(data);
+        });
+
+        socket.on('joinFailed', function () {
+            console.log('join failed');
+            $('.form-signin .text-danger').removeClass('hide');
+            sessionStorage.removeItem('pass');
+        });
+
+        socket.on('connect', function () {
+            connected = true;
+            $('.status').addClass('connected');
+            join();
+        });
+
+
+        socket.on('disconnect', function () {
+            connected = false;
+            console.log('disconnect');
+            $('.status').removeClass('connected');
+            $('.users-list').empty();
+        });
+
+        socket.on('disconnected', function (user) {
+            console.log('disconnected', user);
+            $('.users-list').find('li[data-id="$1"]'.replace("$1", user.id)).remove()
+        });
+
+        socket.on('getOldMessages', function () {
+            console.log('getOldMessages', messages.length);
+            socket.emit('oldMessages', messages);
+        });
+
+        socket.on('oldMessages', function (msgs) {
+            console.log('oldMessages', msgs.length);
+            msgs.reverse();
+            msgs.forEach(function (m) {messages.unshift(m);receivedMessage(m, true);})
+        });
+
+        $('#message').keyup(function (e) {
+            if (!e.ctrlKey && e.which === 13) {// Enter pressed
+                sendSocketMessage(encrypt(e.currentTarget.value));
+                e.currentTarget.value = '';
+            }
+            if (e.ctrlKey && e.which === 13) {// Ctrl+Enter pressed
+                return true;
+            }
+
+        });
+        $('.logout').on('click', function () {
+            sessionStorage.clear();
+            location.reload()
+        });
 
         var room = sessionStorage.getItem('room') || localStorage.getItem('room');
         var username = sessionStorage.getItem('username') || localStorage.getItem('username');
         var pass = sessionStorage.getItem('pass');
         var remember = localStorage.getItem('remember');
         if (pass && room && username) {
-            $main.addClass('logged-in');
             initialize(room, username, pass);
         }
-        else {
-            $main.addClass('not-logged-in');
-        }
+        $main.addClass('not-logged-in');
         $('.room').val(room);
         $('.nick').val(username);
         $('.password').val(pass);
@@ -254,158 +376,108 @@
             sessionStorage.setItem('username', username);
             sessionStorage.setItem('pass', pass);
             initialize(room, username, pass);
-            $main.addClass('logged-in');
-            $main.removeClass('not-logged-in');
+
         });
 
-        function initialize(room, username, password) {
-            console.log(room, username, pass);
+        function initialize(room, username, pass) {
+            password = pass;
+            console.log(room, username, password);
+            if (room.length === 0 || username.length === 0 || password.length === 0) {
+                return;
+            }
 
-            var me = null;
-            socket = io();
-            messages = [];
-            socket.on('joinedUser', function (user) {
-                if (!me || user.id === me.id) {
-                    return;
+
+            if (connected) {
+                join();
+            }
+
+
+
+
+
+
+        }
+
+        function receivedMessage (data, prepend) {
+            console.log('message', data);
+            var li = $('<li>')
+                    .append($("<span class='msg-time'>").text(formatDate(new Date(data.date))))
+                    .append($("<span class='msg-prefix'>").text(data.author.name + " said: "))
+                    .append($("<span class='msg-body'>").text(decrypt(data.message)));
+            if (data.author.id === me.id) {
+                li.addClass('my-message').find('.msg-prefix').text("I said: ");
+            }
+            $('.chat-list ul')[prepend ? 'prepend': 'append'](li);
+            var scroller = $('.chat-list-wrap');
+            var height = scroller[0].scrollHeight - $(scroller).height();
+            $(scroller).stop().animate({ scrollTop: height }, 200);
+        }
+
+        function sendSocketMessage(msg) {
+            socket.emit('sendMessage', {message: msg});
+        }
+
+        function fillZero (number) {
+            if (number.toString().length === 1) {
+                number = "0" + number
+            }
+            return number;
+        }
+
+        function formatDate (date) {
+            return "Y/M/D h:m:s".
+                    replace("Y", date.getFullYear()).
+                    replace("M", fillZero(date.getMonth() + 1)).
+                    replace("D", fillZero(date.getDate())).
+                    replace("h", fillZero(date.getHours())).
+                    replace("m", fillZero(date.getMinutes())).
+                    replace("s", fillZero(date.getSeconds()));
+        }
+
+
+        var JsonFormatter = {
+            stringify: function (cipherParams) {
+                var jsonObj = {
+                    ct: cipherParams.ciphertext.toString(CryptoJS.enc.Base64)
+                };
+                if (cipherParams.iv) {
+                    jsonObj.iv = cipherParams.iv.toString();
                 }
-                var li = $("<li>").text(user.name).attr('data-id', user.id);
-                $('.users-list ul').append(li)
-            });
-
-            socket.on('joined', function (data) {
-                var users = data.users;
-                me = data.me;
-                console.log('joined', data);
-                $('.room-name').text(data.room);
-                $('.users-list ul').empty();
-                $.each(users, function(index, user) {
-                    var li = $("<li>").text(user.name).attr('data-id', user.id);
-                    if (user.id === data.me.id) {
-                        li.text('Me (' + user.name + ')')
-                    }
-                    $('.users-list ul').append(li)
+                if (cipherParams.salt) {
+                    jsonObj.s = cipherParams.salt.toString();
+                }
+                return JSON.stringify(jsonObj);
+            },
+            parse: function (jsonStr) {
+                var jsonObj = JSON.parse(jsonStr);
+                var cipherParams = CryptoJS.lib.CipherParams.create({
+                    ciphertext: CryptoJS.enc.Base64.parse(jsonObj.ct)
                 });
-                $('textarea').focus();
-            });
-
-            socket.on('message', function (data) {
-                messages.push(data);
-                receivedMessage(data);
-            });
-
-            socket.on('connect', function () {
-                socket.emit('join', {room: room, username: username});
-
-            });
-
-            socket.on('disconnect', function () {
-                console.log('disconnect');
-                $('.users-list').empty();
-            });
-
-            socket.on('disconnected', function (user) {
-                console.log('disconnected', user);
-                $('.users-list').find('li[data-id="$1"]'.replace("$1", user.id)).remove()
-            });
-
-            socket.on('getOldMessages', function () {
-                console.log('getOldMessages', messages.length);
-                socket.emit('oldMessages', messages);
-            });
-
-            socket.on('oldMessages', function (msgs) {
-                console.log('oldMessages', msgs.length);
-                msgs.reverse();
-                msgs.forEach(function (m) {messages.unshift(m);receivedMessage(m, true);})
-            });
-
-            $('#message').keyup(function (e) {
-                if (!e.ctrlKey && e.keyCode == 13) {// Enter pressed
-                    sendSocketMessage(encrypt(e.currentTarget.value));
-                    e.currentTarget.value = '';
+                if (jsonObj.iv) {
+                    cipherParams.iv = CryptoJS.enc.Hex.parse(jsonObj.iv)
                 }
-                if (e.ctrlKey && e.keyCode == 13) {// Ctrl+Enter pressed
-                    return true;
+                if (jsonObj.s) {
+                    cipherParams.salt = CryptoJS.enc.Hex.parse(jsonObj.s)
                 }
-
-            });
-            $('.logout').on('click', function () {
-                sessionStorage.clear();
-                location.reload()
-            });
-
-            function receivedMessage (data, prepend) {
-                console.log('message', data);
-                var li = $('<li>')
-                        .append($("<span class='msg-time'>").text(formatDate(new Date(data.date))))
-                        .append($("<span class='msg-prefix'>").text(data.author.name + " said: "))
-                        .append($("<span class='msg-body'>").text(decrypt(data.message)));
-                if (data.author.id === me.id) {
-                    li.addClass('my-message').find('.msg-prefix').text("I said: ");
-                }
-                $('.chat-list ul')[prepend ? 'prepend': 'append'](li);
-                var scroller = $('.chat-list-wrap');
-                var height = scroller[0].scrollHeight - $(scroller).height();
-                $(scroller).stop().animate({ scrollTop: height }, 200);
+                return cipherParams;
             }
+        };
 
-            function sendSocketMessage(msg) {
-                socket.emit('sendMessage', {message: msg});
+        function decrypt (str) {
+            return CryptoJS.AES.decrypt(str, password, { format: JsonFormatter }).toString(CryptoJS.enc.Utf8);
+        }
+
+        function encrypt (str) {
+            return CryptoJS.AES.encrypt($.trim(str), password, { format: JsonFormatter }).toString();
+        }
+
+        function join() {
+            console.log('will join', username, room, password);
+            if (!room || !username || !password) {
+                return;
             }
-
-            function fillZero (number) {
-                if (number.toString().length === 1) {
-                    number = "0" + number
-                }
-                return number;
-            }
-
-            function formatDate (date) {
-                return "Y/M/D h:m:s".
-                        replace("Y", date.getFullYear()).
-                        replace("M", fillZero(date.getMonth() + 1)).
-                        replace("D", fillZero(date.getDate())).
-                        replace("h", fillZero(date.getHours())).
-                        replace("m", fillZero(date.getMinutes())).
-                        replace("s", fillZero(date.getSeconds()));
-            }
-
-
-            var JsonFormatter = {
-                stringify: function (cipherParams) {
-                    var jsonObj = {
-                        ct: cipherParams.ciphertext.toString(CryptoJS.enc.Base64)
-                    };
-                    if (cipherParams.iv) {
-                        jsonObj.iv = cipherParams.iv.toString();
-                    }
-                    if (cipherParams.salt) {
-                        jsonObj.s = cipherParams.salt.toString();
-                    }
-                    return JSON.stringify(jsonObj);
-                },
-                parse: function (jsonStr) {
-                    var jsonObj = JSON.parse(jsonStr);
-                    var cipherParams = CryptoJS.lib.CipherParams.create({
-                        ciphertext: CryptoJS.enc.Base64.parse(jsonObj.ct)
-                    });
-                    if (jsonObj.iv) {
-                        cipherParams.iv = CryptoJS.enc.Hex.parse(jsonObj.iv)
-                    }
-                    if (jsonObj.s) {
-                        cipherParams.salt = CryptoJS.enc.Hex.parse(jsonObj.s)
-                    }
-                    return cipherParams;
-                }
-            };
-
-            function decrypt (str) {
-                return CryptoJS.AES.decrypt(str, password, { format: JsonFormatter }).toString(CryptoJS.enc.Utf8);
-            }
-
-            function encrypt (str) {
-                return CryptoJS.AES.encrypt($.trim(str), password, { format: JsonFormatter }).toString();
-            }
+            var verification = CryptoJS.SHA3(CryptoJS.SHA3(password).toString()).toString();
+            socket.emit('join', {room: room, username: username, verification: verification});
         }
 
 
