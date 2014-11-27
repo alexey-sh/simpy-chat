@@ -89,7 +89,7 @@
         }
         .users-list {
             min-height: 100%;
-            max-width: 240px;
+            width: 240px;
             z-index: 10000;
             border-right: 1px solid #E2E2E2;
         }
@@ -100,7 +100,7 @@
             white-space: nowrap;
         }
         .room-name {
-            max-width: 250px;
+            width: 250px;
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -186,7 +186,24 @@
         }
 
 
-
+        @media screen and (max-width: 700px) {
+            .users-list {
+                width: 140px;
+            }
+            .users-list li {
+                width: 140px;
+            }
+            .chat-list {
+                margin-left: -150px;
+                padding-left: 150px;
+            }
+            .room-name {
+                width: 150px;
+            }
+            .wrap-chat-form {
+                left: 160px;
+            }
+        }
 
     </style>
 </head>
@@ -305,7 +322,7 @@
             connected = false;
             console.log('disconnect');
             $('.status').removeClass('connected');
-            $('.users-list').empty();
+            $('.chat-list ul').empty();
         });
 
         socket.on('disconnected', function (user) {
@@ -378,17 +395,9 @@
             if (room.length === 0 || username.length === 0 || password.length === 0) {
                 return;
             }
-
-
             if (connected) {
                 join();
             }
-
-
-
-
-
-
         }
 
         function receivedMessage (data, prepend) {
