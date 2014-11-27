@@ -218,7 +218,23 @@
             margin-top: -30px;
         }
 
+        .use-https {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            text-align: center;
+        }
+        .use-https a {
+            padding: 0 6px 3px 6px;
+            box-shadow: 0 1px 1px 0 rgb(103, 186, 103);
+            border-radius: 3px;
+            color: #888888
+        }
 
+        .use-https a:hover,.use-https a:focus {
+            color: #288332;
+            text-decoration: underline;
+        }
         @media screen and (max-width: 700px) {
             .users-list {
                 width: 140px;
@@ -245,6 +261,11 @@
 </head>
 <body>
 <div class="status"></div>
+<% if(showHTTPS) { %>
+<div class="use-https">
+    <a href="<%= httpURL %>"><%= i18n('useHTTPS') %></a>
+</div>
+<% } %>
 <div class="container-fluid wrap-main">
         <div class="row wrap-users-list chat">
             <div class="col-md-3 col-sm-3 col-xs-3 users-list">

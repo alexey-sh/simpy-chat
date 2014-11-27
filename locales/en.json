@@ -19,5 +19,6 @@
 	"said": " said: ",
 	"me": "Me",
     "en": "English",
-    "ru": "Русский"
+    "ru": "Русский",
+    "useHTTPS": "Go to the secure connection"
 }
