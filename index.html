@@ -150,9 +150,6 @@
         }
         .form-signin .checkbox label:hover span, .form-signin input[type="checkbox"]:focus + span {
             border-bottom: 1px dotted;
-/*
-            background-color: #fafafa;
-*/
         }
         .form-signin .checkbox {
             font-weight: normal;
@@ -328,14 +325,10 @@
         });
 
         $('#message').keyup(function (e) {
-            if (!e.ctrlKey && e.which === 13) {// Enter pressed
+            if (e.which === 13) {// Enter pressed
                 sendSocketMessage(encrypt(e.currentTarget.value));
                 e.currentTarget.value = '';
             }
-            if (e.ctrlKey && e.which === 13) {// Ctrl+Enter pressed
-                return true;
-            }
-
         });
         $('.logout').on('click', function () {
             sessionStorage.clear();
@@ -359,9 +352,9 @@
         $('.form-signin').on('submit', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            var room = $.trim($('.room').val());
-            var username = $.trim($('.nick').val());
-            var pass = $.trim($('.password').val());
+            room = $.trim($('.room').val());
+            username = $.trim($('.nick').val());
+            pass = $.trim($('.password').val());
             var save = $('.remember').is(':checked');
             if (save) {
                 localStorage.setItem('room', room);
