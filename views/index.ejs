@@ -3,6 +3,12 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.1/css/bootstrap.min.css">
+    <title><%= i18n('title') %></title>
+    <meta name="description" content="<%= i18n('description') %>">
+    <link rel="author" href="https://plus.google.com/112494663717665534239/"/>
+    <link rel="me" href="https://plus.google.com/112494663717665534239/"/>
+    <link rel="publisher" href="https://plus.google.com/112494663717665534239/"/>
+    <meta name="keywords" content="<%= i18n('keywords') %>"/>
 
     <style>
         body {
@@ -42,6 +48,9 @@
         }
         .wrap-main.logged-in .chat, .wrap-main.not-logged-in .login {
             display: block;
+        }
+        .login {
+            padding-top: 40px;
         }
 
 
@@ -129,16 +138,27 @@
             box-shadow: none;
             border-radius: 3px;
         }
+        .page-header {
+            text-align: center;
+            margin-top: 0;
+        }
+        .page-header h1 {
+            margin-top: 0;
+        }
+        .goals {
+
+        }
 
 
         .form-signin {
             max-width: 330px;
             padding: 15px;
-            margin: 0 auto;
+            margin: 0 auto 60px;
         }
         .form-signin .form-signin-heading {
-            margin: 10px;
+            margin: 10px 0;
             font-weight: 100;
+            text-align: center;
         }
         .form-signin .checkbox {
             margin: 0;
@@ -184,6 +204,10 @@
         .form-signin .text-danger {
             color: #a94442;
         }
+        .langs {
+            float: right;
+            margin-top: -30px;
+        }
 
 
         @media screen and (max-width: 700px) {
@@ -213,7 +237,7 @@
         <div class="row wrap-users-list chat">
             <div class="col-md-3 col-sm-3 col-xs-3 users-list">
                 <div class="room-name"></div>
-                <a href="#" class="logout">leave</a>
+                <a href="#" class="logout"><%= i18n('leave') %></a>
                 <ul class="list-unstyled">
 
                 </ul>
@@ -228,7 +252,7 @@
                 <div class="row wrap-chat-form">
                     <form onsubmit="return false;" class="form-inline">
                         <div class="textarea-wrap">
-                            <textarea class="form-control" id="message" placeholder="Type here..."></textarea>
+                            <textarea class="form-control" id="message" placeholder="<%= i18n('typeHere') %>"></textarea>
                         </div>
                     </form>
                 </div>
@@ -236,35 +260,75 @@
         </div>
 
     <div class="login">
+        <div class="langs">
+            <% locales.forEach(function (l) { %>
+            <a href="/<%= l %>/"><%= i18n(l) %></a>
+            <% }) %>
+        </div>
+
+        <div class="page-header">
+            <h1><%= i18n('welcome') %></h1>
+            <div class="goals">
+                <ul class="list-unstyled">
+                    <li>
+                        <%- i18n('goal1') %>
+                    </li>
+                    <li>
+                        <%- i18n('goal2') %>
+
+                    </li>
+                    <li>
+                        <%- i18n('goal3') %>
+                    </li>
+                </ul>
+
+            </div>
+        </div>
         <form class="form-signin" role="form">
-            <h2 class="form-signin-heading">Please, sign in</h2>
-            <label for="inputRoom" class="sr-only">Room</label>
-            <input type="text" tabindex="1" id="inputRoom" class="form-control room" placeholder="Room" required="on" autocomplete="off" autofocus="on">
-            <label for="inputNick" class="sr-only">Nick</label>
-            <input type="text" tabindex="2"  id="inputNick" class="form-control nick" placeholder="Nick name" autocomplete="off" required="on">
-            <label for="inputPassword" class="sr-only">Password</label>
-            <input type="password" tabindex="3"  id="inputPassword" class="form-control password" placeholder="Password" autocomplete="off" required="on">
+            <h2 class="form-signin-heading"><%= i18n('signin') %></h2>
+            <label for="inputRoom" class="sr-only"><%= i18n('formRoom') %></label>
+            <input type="text" tabindex="1" id="inputRoom" class="form-control room" placeholder="<%= i18n('formRoom') %>" required="on" autocomplete="off" autofocus="on">
+            <label for="inputNick" class="sr-only"><%= i18n('formNick') %></label>
+            <input type="text" tabindex="2"  id="inputNick" class="form-control nick" placeholder="<%= i18n('formNick') %>" autocomplete="off" required="on">
+            <label for="inputPassword" class="sr-only"><%= i18n('formPassword') %></label>
+            <input type="password" tabindex="3"  id="inputPassword" class="form-control password" placeholder="<%= i18n('formPassword') %>" autocomplete="off" required="on">
             <div class="checkbox">
                 <label>
-                    <input tabindex="4"  type="checkbox" value="remember-me" class="remember"> <span>Remember username and room</span>
+                    <input tabindex="4"  type="checkbox" value="remember-me" class="remember"> <span><%= i18n('formRemember') %></span>
                 </label>
             </div>
-            <button class="btn btn-lg btn-default btn-block" type="submit">Join!</button>
+            <button class="btn btn-lg btn-default btn-block" type="submit"><%= i18n('formJoin') %></button>
             <span id="helpBlock" class="help-block text-danger hide">
-                The room is exists and password is not valid.
-                Choose another room or enter a valid password.
+                <%= i18n('joinError') %>
             </span>
         </form>
+
+        <footer>
+            <div class="container">
+                <p>© <a href="https://plus.google.com/112494663717665534239" target="_blank">+Alexey</a>, <a target="_blank" href="mailto:alexey.sunshine@gmail.com">email</a>, 2014 </p>
+            </div>
+        </footer>
     </div>
 </div>
 
-<!--<script src="//cdn.socket.io/socket.io-1.2.0.js"></script>-->
-<script src="/socket.io/socket.io.js"></script>
+
+<script src="//cdn.socket.io/socket.io-1.2.0.js"></script>
+<script>
+    (function () {
+        if (!io) {
+            var my_awesome_script = document.createElement('script');
+            my_awesome_script.setAttribute('src','/socket.io/socket.io.js');
+            document.head.appendChild(my_awesome_script);
+        }
+    })();
+</script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.1/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/sha3.js"></script>
 
 <script>
+    console.timeEnd('loading')
     $(function () {
         var connected = false;
         var $main = $('.wrap-main');
@@ -293,7 +357,7 @@
             $.each(users, function(index, user) {
                 var li = $("<li>").text(user.name).attr('data-id', user.id);
                 if (user.id === data.me.id) {
-                    li.text('Me (' + user.name + ')')
+                    li.text('<%= i18n('me') %> (' + user.name + ')')
                 }
                 $('.users-list ul').append(li)
             });
@@ -323,6 +387,7 @@
             console.log('disconnect');
             $('.status').removeClass('connected');
             $('.chat-list ul').empty();
+            messages = [];
         });
 
         socket.on('disconnected', function (user) {
@@ -404,10 +469,10 @@
             console.log('message', data);
             var li = $('<li>')
                     .append($("<span class='msg-time'>").text(formatDate(new Date(data.date))))
-                    .append($("<span class='msg-prefix'>").text(data.author.name + " said: "))
+                    .append($("<span class='msg-prefix'>").text(data.author.name + " <%= i18n('said') %> "))
                     .append($("<span class='msg-body'>").text(decrypt(data.message)));
             if (data.author.id === me.id) {
-                li.addClass('my-message').find('.msg-prefix').text("I said: ");
+                li.addClass('my-message').find('.msg-prefix').text("<%= i18n('iSaid') %>");
             }
             $('.chat-list ul')[prepend ? 'prepend': 'append'](li);
             var scroller = $('.chat-list-wrap');

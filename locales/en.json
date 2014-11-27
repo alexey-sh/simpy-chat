@@ -1,0 +1,23 @@
+{
+	"title": "Encrypted Chat Online AES",
+	"description": "This is an encrypted chat. All messages will be encrypted using AES algorithm. Free an open source.",
+	"keywords": "Chat, AES, encrypted, free, open, online, cipher",
+	"leave": "leave",
+	"typeHere": "Type here...",
+	"welcome": "Welcome to the encrypted chat!",
+	"goal1": "All your messages will be encrypted using <a href=\"https://wikipedia.org/wiki/Advanced_Encryption_Standard\" target=\"_blank\">AES encryption algorithm</a>.",
+	"goal2": "Your messages will not be stored on the server.",
+	"goal3": "You can check <a href=\"https://github.com/alexey-sh/simpy-chat\" target=\"_blank\">the source code</a> and be sure of secrecy.",
+	"signin": "Please, sign in",
+	"formRoom": "Room",
+	"formNick": "Nick name",
+	"formPassword": "Password",
+	"formRemember": "Remember username and room",
+	"formJoin": "Join!",
+	"joinError": "The room is exists and password is not valid. Choose another room or enter a valid password.",
+	"iSaid": "I said: ",
+	"said": " said: ",
+	"me": "Me",
+    "en": "English",
+    "ru": "Русский"
+}

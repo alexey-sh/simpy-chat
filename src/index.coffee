@@ -4,25 +4,40 @@ io = require("socket.io")(http)
 path = require 'path'
 Flat = require './flat'
 Users = require './users'
+cookieParser = require 'cookie-parser'
+i18n = require 'i18n'
+ejs = require 'ejs'
+
 port = process.env.PORT or 3000
 
-# socketId: {
-#		name: username
-#		roomId: roomId
-#	}
-#	
+
 users = new Users
-#
-#	* uniqueId: [<userId>]
-#	* }
-#	* 
-
-rooms = {}
-
 flat = new Flat
 
+locales = ['en', 'ru']
+
+i18n.configure
+    locales: locales,
+    cookie: 'lang',
+    defaultLocale: 'en',
+    directory: path.join(__dirname, '../locales')
+
+app.use(cookieParser())
+app.use(i18n.init)
+app.set('views',  path.join(__dirname, '../views'))
+app.set('view engine', 'ejs');
+
 app.get "/", (req, res) ->
-    res.sendFile path.join(__dirname, "../index.html")
+    locale = res.getLocale()
+    res.redirect("/#{locale}/")
+
+app.get "/:locale/", (req, res) ->
+    res.setLocale(req.params.locale)
+    res.cookie('lang', res.getLocale());
+    res.render('index',
+        i18n: res.__
+        locales: locales
+    )
     return
 
 io.on "connection", (socket) ->
@@ -49,7 +64,7 @@ io.on "connection", (socket) ->
             io.sockets.to(room).emit "disconnected", user
         catch e
             console.error e
-        console.log "disconnect", users, socket.id, rooms
+        console.log "disconnect", users, socket.id
 
     socket.on "join", (data) ->
         namespace = data.room
