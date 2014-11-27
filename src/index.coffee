@@ -4,7 +4,7 @@ io = require("socket.io")(http)
 path = require 'path'
 Flat = require './flat'
 Users = require './users'
-
+port = process.env.PORT or 3000
 
 # socketId: {
 #		name: username
@@ -78,5 +78,5 @@ io.on "connection", (socket) ->
 
             console.log "joined", user.name, namespace, users.length, socket.id
 
-http.listen process.env.PORT or 3000 , ->
-    console.log "listening on *:3000"
+http.listen port , ->
+    console.log "listening on *:#{port}"
