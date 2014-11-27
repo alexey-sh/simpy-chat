@@ -5,31 +5,61 @@
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.1/css/bootstrap.min.css">
 
     <style>
+        body {
+            color: #575252;
+            font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+        }
+        .btn:focus, .btn:focus:active {
+            outline: none;
+        }
         .chat-list {
             height: 100%;
-            overflow-y: scroll;
 
         }
-        .wrap-main, .wrap-users-list, body, html {
+        .chat, .login, .wrap-main, .wrap-users-list, body, html {
             height: 100%;
             min-height: 100%;
             max-height: 100%;
         }
         .wrap-main {
-            padding-bottom: 43px;
+
         }
+        .wrap-main .chat, .login {
+            display: none;
+        }
+        .wrap-main.logged-in .login {
+            display: none;
+        }
+        .wrap-main.logged-in .chat, .wrap-main.not-logged-in .login {
+            display: block;
+        }
+
         .wrap-users-list {
 
 
         }
-        .chat-list {
+        .chat-list-wrap {
+            overflow-y: scroll;
             height: 100%;
         }
+        .chat-list {
+            height: 100%;
+            width: 100%;
+            padding-bottom: 55px;
+            margin-left: -250px;
+            padding-left: 250px;
+            padding-right: 0;
+        }
         .wrap-chat-form {
-            height: 40px;
+            height: 50px;
+            position: fixed;
+            bottom: 0px;
+            right: 15px;
+            left: 250px;
+            width: inherit;
         }
         .wrap-chat-form form {
-            margin: 0;
+            margin: 0 15px 0 5px;
         }
         .wrap-chat-form * {
             height: 100%;
@@ -40,24 +70,12 @@
         }
         .users-list {
             min-height: 100%;
-        }
-        .send {
-            width: 80px;
-            margin: 0;
-            display: inline-block;
-            height: 100%;
-            min-height: 100%;
-            vertical-align: top;
-        }
-        .username {
-            font-weight: bold;
+            max-width: 250px;
         }
 
         .textarea-wrap {
             display: inline-block;
             width: 100%;
-            margin-right: -100px;
-            padding-right: 100px;
         }
         .textarea-wrap textarea {
             padding: 2px 4px;
@@ -69,8 +87,12 @@
             height: 100%;
             max-height: 100%;
             min-height: 100%;
+            font-size: 14px;
+            line-height: 16px;
         }
+
         .chat-list ul {
+
             margin: 10px 0;
         }
         .msg-prefix {
@@ -81,189 +103,311 @@
             margin-right: 5px;
         }
 
+        .form-signin {
+            max-width: 330px;
+            padding: 15px;
+            margin: 0 auto;
+        }
+        .form-signin .form-signin-heading {
+            margin: 10px;
+            font-weight: 100;
+        }
+        .form-signin .checkbox {
+            margin: 0;
+            text-align: center;
+        }
+        .form-signin .checkbox label {
+            padding: 10px 10px 10px 20px;
+            display: block;
+        }
+        .form-signin .checkbox label:hover span, .form-signin input[type="checkbox"]:focus + span {
+            border-bottom: 1px dotted;
+/*
+            background-color: #fafafa;
+*/
+        }
+        .form-signin .checkbox {
+            font-weight: normal;
+        }
+        .form-signin .form-control {
+            position: relative;
+            height: auto;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .form-signin .form-control:focus {
+            z-index: 2;
+        }
+        .form-signin input.room {
+            margin-bottom: -1px;
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+        .form-signin input.nick {
+            margin-bottom: -1px;
+            border-radius: 0;
+
+        }
+        .form-signin input[type="password"] {
+            margin-bottom: 0;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+
+
+
 
     </style>
 </head>
 <body>
 <div class="container-fluid wrap-main">
-    <div class="row wrap-users-list">
-        <div class="col-md-3 users-list">
-            Users in room <span class="room"></span> (<a href="#" class="logout">logout</a>)
-            <ul class="unstyled">
+    <div class="chat">
+        <div class="row wrap-users-list">
+            <div class="col-md-3 col-sm-3 col-xs-3 users-list">
+                Users in room <span class="room-name"></span>: (<a href="#" class="logout">leave</a>)
+                <ul class="list-unstyled">
 
-            </ul>
-        </div>
-        <div class="col-md-9 chat-list">
-
-            <ul class="list-unstyled">
-
-            </ul>
-        </div>
-    </div>
-    <div class="row wrap-chat-form">
-        <form onsubmit="return false;" class="form-inline">
-            <div class="textarea-wrap">
-                <textarea class="form-control" id="message" placeholder="Type here..."></textarea>
+                </ul>
             </div>
-            <button class="btn btn-default send">Send</button>
+            <div class="col-md-9 col-xs-9 col-sm-9 chat-list">
+
+                <div class="chat-list-wrap">
+                    <ul class="list-unstyled">
+
+                    </ul>
+                </div>
+                <div class="row wrap-chat-form">
+                    <form onsubmit="return false;" class="form-inline">
+                        <div class="textarea-wrap">
+                            <textarea class="form-control" id="message" placeholder="Type here..."></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="login">
+        <form class="form-signin" role="form">
+            <h2 class="form-signin-heading">Please, sign in</h2>
+            <label for="inputRoom" class="sr-only">Room</label>
+            <input type="text" tabindex="1" id="inputRoom" class="form-control room" placeholder="Room" required="on" autofocus="on">
+            <label for="inputNick" class="sr-only">Nick</label>
+            <input type="text" tabindex="2"  id="inputNick" class="form-control nick" placeholder="Nick name" required="on">
+            <label for="inputPassword" class="sr-only">Password</label>
+            <input type="password" tabindex="3"  id="inputPassword" class="form-control password" placeholder="Password" required="on">
+            <div class="checkbox">
+                <label>
+                    <input tabindex="4"  type="checkbox" value="remember-me" class="remember"> <span>Remember username and room</span>
+                </label>
+            </div>
+            <button class="btn btn-lg btn-default btn-block" type="submit">Join!</button>
         </form>
     </div>
 </div>
 
-<script src="//cdn.socket.io/socket.io-1.2.0.js"></script>
+<!--<script src="//cdn.socket.io/socket.io-1.2.0.js"></script>-->
+<script src="/socket.io/socket.io.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
 <script>
     $(function () {
-        var room = sessionStorage.getItem('room') || prompt("Enter room name");
-        var username = sessionStorage.getItem('username') || prompt("Enter your name");
-        var password = sessionStorage.getItem('pass') || prompt("Enter password");
-        var me = null;
-        sessionStorage.setItem('room', room);
-        sessionStorage.setItem('username', username);
-        sessionStorage.setItem('pass', password);
-        socket = io();
-        messages = [];
-        socket.on('joinedUser', function (user) {
-            if (!me || user.id === me.id) {
-                return;
+        var $main = $('.wrap-main');
+
+        var room = sessionStorage.getItem('room') || localStorage.getItem('room');
+        var username = sessionStorage.getItem('username') || localStorage.getItem('username');
+        var pass = sessionStorage.getItem('pass');
+        var remember = localStorage.getItem('remember');
+        if (pass && room && username) {
+            $main.addClass('logged-in');
+            initialize(room, username, pass);
+        }
+        else {
+            $main.addClass('not-logged-in');
+        }
+        $('.room').val(room);
+        $('.nick').val(username);
+        $('.password').val(pass);
+        if (remember) {
+            $('.remember').attr('checked', 'checked');
+        }
+        $('.form-signin').on('submit', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var room = $.trim($('.room').val());
+            var username = $.trim($('.nick').val());
+            var pass = $.trim($('.password').val());
+            var save = $('.remember').is(':checked');
+            if (save) {
+                localStorage.setItem('room', room);
+                localStorage.setItem('username', username);
             }
-            var li = $("<li>").text(user.name).attr('data-id', user.id);
-            $('.users-list ul').append(li)
+            else {
+                localStorage.removeItem('room');
+                localStorage.removeItem('username');
+            }
+            localStorage.setItem('remember', (save ? '1': ''));
+            sessionStorage.setItem('room', room);
+            sessionStorage.setItem('username', username);
+            sessionStorage.setItem('pass', pass);
+            initialize(room, username, pass);
+            $main.addClass('logged-in');
+            $main.removeClass('not-logged-in');
         });
 
-        socket.on('joined', function (data) {
-            var users = data.users;
-            me = data.me;
-            console.log('joined', data);
-            $('.room').text(data.room);
-            $('.users-list ul').empty();
-            $.each(users, function(index, user) {
-                var li = $("<li>").text(user.name).attr('data-id', user.id);
-                if (user.id === data.me.id) {
-                    li.text('Me (' + user.name + ')')
+        function initialize(room, username, password) {
+            console.log(room, username, pass);
+
+            var me = null;
+            socket = io();
+            messages = [];
+            socket.on('joinedUser', function (user) {
+                if (!me || user.id === me.id) {
+                    return;
                 }
+                var li = $("<li>").text(user.name).attr('data-id', user.id);
                 $('.users-list ul').append(li)
             });
-            $('textarea').focus();
-        });
 
-        socket.on('message', function (data) {
-            messages.push(data);
-            receivedMessage(data);
-        });
-
-        socket.on('connect', function () {
-            socket.emit('join', {room: room, username: username});
-
-        });
-
-        socket.on('disconnect', function () {
-            console.log('disconnect')
-        });
-
-        socket.on('disconnected', function (user) {
-            console.log('disconnected', user);
-            $('.users-list').find('li[data-id="$1"]'.replace("$1", user.id)).remove()
-        });
-
-        socket.on('getOldMessages', function () {
-            console.log('getOldMessages', messages.length);
-            socket.emit('oldMessages', messages);
-        });
-
-        socket.on('oldMessages', function (msgs) {
-            console.log('oldMessages', msgs.length);
-            msgs.reverse();
-            msgs.forEach(function (m) {messages.unshift(m);receivedMessage(m, true);})
-        });
-
-        $('#message').keydown(function (e) {
-            if (e.ctrlKey && e.keyCode == 13) {// Ctrl-Enter pressed
-                sendMessage();
-            }
-        });
-        $('.send').on('click', sendMessage);
-        $('.logout').on('click', function () {
-            sessionStorage.clear();
-            location.reload()
-        });
-
-        function receivedMessage (data, prepend) {
-            console.log('message', data);
-            var li = $('<li>')
-                    .append($("<span class='msg-time'>").text(formatDate(new Date(data.date))))
-                    .append($("<span class='msg-prefix'>").text(data.author.name + " said: "))
-                    .append($("<span class='msg-body'>").text(decrypt(data.message)));
-            if (data.author.id === me.id) {
-                li.addClass('my-message').find('.msg-prefix').text("I said: ");
-            }
-            $('.chat-list ul')[prepend ? 'prepend': 'append'](li)
-        }
-
-        function sendSocketMessage(msg) {
-            socket.emit('sendMessage', {message: msg});
-        }
-
-        function sendMessage() {
-            var msg = $("#message");
-            sendSocketMessage(encrypt(msg.val()));
-            msg.val('');
-        }
-
-        function fillZero (number) {
-            if (number.toString().length === 1) {
-                number = "0" + number
-            }
-            return number;
-        }
-
-        function formatDate (date) {
-            return "Y/M/D h:m:s".
-                    replace("Y", date.getFullYear()).
-                    replace("M", fillZero(date.getMonth() + 1)).
-                    replace("D", fillZero(date.getDate())).
-                    replace("h", fillZero(date.getHours())).
-                    replace("m", fillZero(date.getMinutes())).
-                    replace("s", fillZero(date.getSeconds()));
-        }
-
-
-        var JsonFormatter = {
-            stringify: function (cipherParams) {
-                var jsonObj = {
-                    ct: cipherParams.ciphertext.toString(CryptoJS.enc.Base64)
-                };
-                if (cipherParams.iv) {
-                    jsonObj.iv = cipherParams.iv.toString();
-                }
-                if (cipherParams.salt) {
-                    jsonObj.s = cipherParams.salt.toString();
-                }
-                return JSON.stringify(jsonObj);
-            },
-            parse: function (jsonStr) {
-                var jsonObj = JSON.parse(jsonStr);
-                var cipherParams = CryptoJS.lib.CipherParams.create({
-                    ciphertext: CryptoJS.enc.Base64.parse(jsonObj.ct)
+            socket.on('joined', function (data) {
+                var users = data.users;
+                me = data.me;
+                console.log('joined', data);
+                $('.room-name').text(data.room);
+                $('.users-list ul').empty();
+                $.each(users, function(index, user) {
+                    var li = $("<li>").text(user.name).attr('data-id', user.id);
+                    if (user.id === data.me.id) {
+                        li.text('Me (' + user.name + ')')
+                    }
+                    $('.users-list ul').append(li)
                 });
-                if (jsonObj.iv) {
-                    cipherParams.iv = CryptoJS.enc.Hex.parse(jsonObj.iv)
+                $('textarea').focus();
+            });
+
+            socket.on('message', function (data) {
+                messages.push(data);
+                receivedMessage(data);
+            });
+
+            socket.on('connect', function () {
+                socket.emit('join', {room: room, username: username});
+
+            });
+
+            socket.on('disconnect', function () {
+                console.log('disconnect');
+                $('.users-list').empty();
+            });
+
+            socket.on('disconnected', function (user) {
+                console.log('disconnected', user);
+                $('.users-list').find('li[data-id="$1"]'.replace("$1", user.id)).remove()
+            });
+
+            socket.on('getOldMessages', function () {
+                console.log('getOldMessages', messages.length);
+                socket.emit('oldMessages', messages);
+            });
+
+            socket.on('oldMessages', function (msgs) {
+                console.log('oldMessages', msgs.length);
+                msgs.reverse();
+                msgs.forEach(function (m) {messages.unshift(m);receivedMessage(m, true);})
+            });
+
+            $('#message').keyup(function (e) {
+                if (!e.ctrlKey && e.keyCode == 13) {// Enter pressed
+                    sendSocketMessage(encrypt(e.currentTarget.value));
+                    e.currentTarget.value = '';
                 }
-                if (jsonObj.s) {
-                    cipherParams.salt = CryptoJS.enc.Hex.parse(jsonObj.s)
+                if (e.ctrlKey && e.keyCode == 13) {// Ctrl+Enter pressed
+                    return true;
                 }
-                return cipherParams;
+
+            });
+            $('.logout').on('click', function () {
+                sessionStorage.clear();
+                location.reload()
+            });
+
+            function receivedMessage (data, prepend) {
+                console.log('message', data);
+                var li = $('<li>')
+                        .append($("<span class='msg-time'>").text(formatDate(new Date(data.date))))
+                        .append($("<span class='msg-prefix'>").text(data.author.name + " said: "))
+                        .append($("<span class='msg-body'>").text(decrypt(data.message)));
+                if (data.author.id === me.id) {
+                    li.addClass('my-message').find('.msg-prefix').text("I said: ");
+                }
+                $('.chat-list ul')[prepend ? 'prepend': 'append'](li);
+                var scroller = $('.chat-list-wrap');
+                var height = scroller[0].scrollHeight - $(scroller).height();
+                $(scroller).stop().animate({ scrollTop: height }, 200);
             }
-        };
 
-        function decrypt (str) {
-            return CryptoJS.AES.decrypt(str, password, { format: JsonFormatter }).toString(CryptoJS.enc.Utf8);
+            function sendSocketMessage(msg) {
+                socket.emit('sendMessage', {message: msg});
+            }
+
+            function fillZero (number) {
+                if (number.toString().length === 1) {
+                    number = "0" + number
+                }
+                return number;
+            }
+
+            function formatDate (date) {
+                return "Y/M/D h:m:s".
+                        replace("Y", date.getFullYear()).
+                        replace("M", fillZero(date.getMonth() + 1)).
+                        replace("D", fillZero(date.getDate())).
+                        replace("h", fillZero(date.getHours())).
+                        replace("m", fillZero(date.getMinutes())).
+                        replace("s", fillZero(date.getSeconds()));
+            }
+
+
+            var JsonFormatter = {
+                stringify: function (cipherParams) {
+                    var jsonObj = {
+                        ct: cipherParams.ciphertext.toString(CryptoJS.enc.Base64)
+                    };
+                    if (cipherParams.iv) {
+                        jsonObj.iv = cipherParams.iv.toString();
+                    }
+                    if (cipherParams.salt) {
+                        jsonObj.s = cipherParams.salt.toString();
+                    }
+                    return JSON.stringify(jsonObj);
+                },
+                parse: function (jsonStr) {
+                    var jsonObj = JSON.parse(jsonStr);
+                    var cipherParams = CryptoJS.lib.CipherParams.create({
+                        ciphertext: CryptoJS.enc.Base64.parse(jsonObj.ct)
+                    });
+                    if (jsonObj.iv) {
+                        cipherParams.iv = CryptoJS.enc.Hex.parse(jsonObj.iv)
+                    }
+                    if (jsonObj.s) {
+                        cipherParams.salt = CryptoJS.enc.Hex.parse(jsonObj.s)
+                    }
+                    return cipherParams;
+                }
+            };
+
+            function decrypt (str) {
+                return CryptoJS.AES.decrypt(str, password, { format: JsonFormatter }).toString(CryptoJS.enc.Utf8);
+            }
+
+            function encrypt (str) {
+                return CryptoJS.AES.encrypt($.trim(str), password, { format: JsonFormatter }).toString();
+            }
         }
 
-        function encrypt (str) {
-            return CryptoJS.AES.encrypt(str, password, { format: JsonFormatter }).toString();
-        }
 
     });
 </script>
