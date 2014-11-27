@@ -39,7 +39,6 @@ app.get "/:locale/", (req, res) ->
     res.render('index',
         i18n: res.__
         locales: locales
-        showHTTPS: req.protocol isnt 'https'
         httpURL: "https://#{req.get('host')}#{req.originalUrl}"
     )
     return
